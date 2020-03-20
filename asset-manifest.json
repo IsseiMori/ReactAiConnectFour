@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/ReactAiConnectFour/static/css/main.f807df67.chunk.css",
+    "main.js": "/ReactAiConnectFour/static/js/main.a5e60ac6.chunk.js",
+    "main.js.map": "/ReactAiConnectFour/static/js/main.a5e60ac6.chunk.js.map",
+    "runtime-main.js": "/ReactAiConnectFour/static/js/runtime-main.f450c979.js",
+    "runtime-main.js.map": "/ReactAiConnectFour/static/js/runtime-main.f450c979.js.map",
+    "static/js/2.cdb4fe8a.chunk.js": "/ReactAiConnectFour/static/js/2.cdb4fe8a.chunk.js",
+    "static/js/2.cdb4fe8a.chunk.js.map": "/ReactAiConnectFour/static/js/2.cdb4fe8a.chunk.js.map",
+    "index.html": "/ReactAiConnectFour/index.html",
+    "precache-manifest.526956ba548d396cc6f8c8089498362a.js": "/ReactAiConnectFour/precache-manifest.526956ba548d396cc6f8c8089498362a.js",
+    "service-worker.js": "/ReactAiConnectFour/service-worker.js",
+    "static/css/main.f807df67.chunk.css.map": "/ReactAiConnectFour/static/css/main.f807df67.chunk.css.map",
+    "static/js/2.cdb4fe8a.chunk.js.LICENSE.txt": "/ReactAiConnectFour/static/js/2.cdb4fe8a.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.f450c979.js",
+    "static/js/2.cdb4fe8a.chunk.js",
+    "static/css/main.f807df67.chunk.css",
+    "static/js/main.a5e60ac6.chunk.js"
+  ]
+}
