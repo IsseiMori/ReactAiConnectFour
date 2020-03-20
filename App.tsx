@@ -154,6 +154,255 @@ const checkWinningSlice = (miniBoard: Player[]) => {
   return false;
 };
 
+
+/* -------------------- AI FUNCTIONS STARTS ------------------ */
+
+// -1 if fails
+// 0 if success
+const tryDropCoin = (board: Board, col: number, player: Player) => {
+  if (board[0][col] !== 0) return -1
+
+  for (let row = 1; row < board.length; row++) {
+    if (board[row][col] !== 0) {
+      board[row-1][col] = player
+      return 0
+    }
+  }
+
+  board[board.length-1][col] = player
+  return 0
+}
+
+// -1 if fails
+// 0 if success
+const tryRemoveCoin = (board: Board, col: number) => {
+  if (board[board.length-1][col] !== 0) return -1
+
+  for (let row = 0; row < board.length; row++) {
+    if (board[row][col] !== 0) {
+      board[row-1][col] = 0
+      return 0
+    }
+  }
+
+  return -1
+}
+
+const alphaBetaRoot = (board: Board, player: Player, depth: number, a: number, b: number) => {
+  let maxV = Number.NEGATIVE_INFINITY;
+  let maxC = 0
+  let invalid = 1
+
+  let p = [0,0,0,0,0,0,0]
+
+  for (let col = 0; col < board[0].length; col++) {
+    if (tryDropCoin(board, col, player) !== 0) continue
+
+    let v = alphaBetaMin(board, player, depth+1, a, b)
+    p[col] = v
+
+    if (v > maxV || invalid === 1) {
+      invalid = 0
+      maxV = v
+      maxC = col
+    }
+    if (v >= b) return maxV
+    if (a < v) a = v
+    tryRemoveCoin(board, col)
+  }
+
+  return maxC
+}
+
+const alphaBetaMax = (board: Board, player: Player, depth: number, a: number, b: number) => {
+  return 0;
+}
+
+const alphaBetaMin = (board: Board, player: Player, depth: number, a: number, b: number) => {
+  return 0;
+}
+
+/* Evaluation value of the current board for player */
+const evaluationFunction = (board: Board, player: Player) => {
+
+  const opponent = 1
+  const threes = countThrees(board, player)
+  const threes_o = countThrees(board, opponent)
+  const twos = countTwos(board, player)
+  const twos_o = countTwos(board, opponent)
+
+  return (3 * threes + twos) - (3 * threes_o + twos_o) 
+}
+
+/* Count the number of three consecutive player color */
+const countThrees = (board: Board, player: Player) => {
+
+  let count = 0
+
+  // Checks wins horizontally
+  for (let r = 0; r < board.length; r++) {
+    for (let c = 0; c <= board[0].length - 3; c++) {
+
+      const boardSlice = [
+        board[r][c],
+        board[r][c+1],
+        board[r][c+2]
+      ];
+
+
+      if (board[r][c] === player) {
+        if (isConsecutive(boardSlice)) count++
+      }
+    }
+  }
+
+  // check wins vertically
+  for (let r = 0; r <= board.length - 3; r++) {
+    for (let c = 0; c < board[0].length; c++) {
+      
+      const boardSlice = [
+        board[r][c],
+        board[r+1][c],
+        board[r+2][c]
+      ];
+
+      if (board[r][c] === player) {
+        if (isConsecutive(boardSlice)) count++
+      }
+    }
+  }
+
+  // check wins vertically
+  for (let r = 0; r <= 3; r++) {
+    for (let c = 0; c < board[0].length; c++) {
+
+      // Checks diagonal down-left
+      if (c >= 2) {
+        const boardSlice = [
+          board[r][c],
+          board[r+1][c-1],
+          board[r+2][c-2]
+        ];
+  
+        if (board[r][c] === player) {
+          if (isConsecutive(boardSlice)) count++
+        }
+      } 
+
+      // Checks diagonal down-right
+      if (c <= 4) {
+        const boardSlice = [
+          board[r][c],
+          board[r+1][c+1],
+          board[r+2][c+2]
+        ];
+  
+        if (board[r][c] === player) {
+          if (isConsecutive(boardSlice)) count++
+        }
+      }
+    }
+  }
+
+  return count
+}
+
+/* Count the number of two consecutive player color */
+const countTwos = (board: Board, player: Player) => {
+
+  let count = 0
+
+  // Checks wins horizontally
+  for (let r = 0; r < board.length; r++) {
+    for (let c = 0; c <= board[0].length - 2; c++) {
+
+      const boardSlice = [
+        board[r][c],
+        board[r][c+1]
+      ];
+
+      if (board[r][c] === player) {
+        if (isConsecutive(boardSlice)) count++
+      }
+    }
+  }
+
+  // check wins vertically
+  for (let r = 0; r <= board.length - 2; r++) {
+    for (let c = 0; c < board[0].length; c++) {
+      
+      const boardSlice = [
+        board[r][c],
+        board[r+1][c]
+      ];
+
+      if (board[r][c] === player) {
+        if (isConsecutive(boardSlice)) count++
+      }
+    }
+  }
+
+  // check wins vertically
+  for (let r = 0; r <= 4; r++) {
+    for (let c = 0; c < board[0].length; c++) {
+
+      // Checks diagonal down-left
+      if (c >= 2) {
+        const boardSlice = [
+          board[r][c],
+          board[r+1][c-1]
+        ];
+  
+        if (board[r][c] === player) {
+          if (isConsecutive(boardSlice)) count++
+        }
+      } 
+
+      // Checks diagonal down-right
+      if (c <= 5) {
+        const boardSlice = [
+          board[r][c],
+          board[r+1][c+1]
+        ];
+  
+        if (board[r][c] === player) {
+          if (isConsecutive(boardSlice)) count++
+        }
+      }
+    }
+  }
+
+  return count
+}
+
+/* Return true if the  */
+const isConsecutive = (miniBoard: Player[]) => {
+  if (miniBoard.some(cell => cell === Player.None)) return false;
+
+  if (miniBoard.length === 2) {
+    if (
+      miniBoard[0] === miniBoard[1] &&
+      miniBoard[1] === miniBoard[2]
+    ) {
+      return true
+    }
+  }
+
+  if (miniBoard.length === 3) {
+    if (
+      miniBoard[0] === miniBoard[1] &&
+      miniBoard[1] === miniBoard[2] &&
+      miniBoard[2] === miniBoard[3]
+    ) {
+      return true
+    }
+  }
+
+  return false;
+};
+
+/* -------------------- AI FUNCTIONS ENDS -------------------- */
+
 class App extends React.Component<{}, State> {
 
   state: State = {
@@ -177,14 +426,22 @@ class App extends React.Component<{}, State> {
   public makeMove(col: number) {
     const {board, playerTurn} = this.state
 
+    const opponent = playerTurn === 1? 2:1
     const newBoard = board.slice()
-    //newBoard[0][col] = playerTurn
-    dropCoin(newBoard, col, playerTurn)
 
-    const gameState = gameCompleted(newBoard);
+    // drop a coin for user and update
+    dropCoin(newBoard, col, playerTurn)
+    let gameState = gameCompleted(newBoard);
     this.setState({
       board: newBoard,
-      playerTurn: playerTurn === 1? 2:1,
+      gameState
+    });
+
+    // drop a coin for ai and update
+    dropCoin(newBoard, alphaBetaRoot(board, playerTurn, 3, Number.NEGATIVE_INFINITY,  Number.POSITIVE_INFINITY), opponent)
+    gameState = gameCompleted(newBoard);
+    this.setState({
+      board: newBoard,
       gameState
     });
   }
