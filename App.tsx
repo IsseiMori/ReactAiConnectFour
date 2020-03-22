@@ -39,17 +39,17 @@ const initializeBoard = () => {
 
 /* Drop a coin in the column */
 const dropCoin = (board: Board, col: number, player: Player) => {
-  if (board[0][col] !== 0) return
+  if (board[0][col] !== 0) return false
 
   for (let row = 1; row < board.length; row++) {
     if (board[row][col] !== 0) {
       board[row-1][col] = player
-      return
+      return true
     }
   }
 
   board[board.length-1][col] = player
-  return
+  return true
 }
 
 /* 
@@ -176,11 +176,10 @@ const tryDropCoin = (board: Board, col: number, player: Player) => {
 // -1 if fails
 // 0 if success
 const tryRemoveCoin = (board: Board, col: number) => {
-  if (board[board.length-1][col] !== 0) return -1
 
   for (let row = 0; row < board.length; row++) {
     if (board[row][col] !== 0) {
-      board[row-1][col] = 0
+      board[row][col] = 0
       return 0
     }
   }
@@ -188,48 +187,117 @@ const tryRemoveCoin = (board: Board, col: number) => {
   return -1
 }
 
-const alphaBetaRoot = (board: Board, player: Player, depth: number, a: number, b: number) => {
+
+const alphaBetaRoot = async (board: Board, player: Player, depth: number, maxDepth: number, a: number, b: number) => {
+
+    let maxV = Number.NEGATIVE_INFINITY;
+    let maxC = 0
+    let invalid = 1
+
+    let p = [0,0,0,0,0,0,0]
+
+    for (let col = 0; col < board[0].length; col++) {
+      var newBoard = [];
+      for (var i = 0; i < board.length; i++)
+      newBoard[i] = board[i].slice();
+
+      if (tryDropCoin(newBoard, col, 2) !== 0) continue
+
+      let v = await alphaBetaMin(newBoard, player, depth+1, maxDepth, a, b)
+      p[col] = v
+
+      if (v > maxV || invalid === 1) {
+        invalid = 0
+        maxV = v
+        maxC = col
+      }
+      if (v >= b) return maxV
+      if (a < v) a = v
+      if (tryRemoveCoin(newBoard, col) === -1) console.log("ERRORR")
+    }
+
+    console.log(p)
+
+    return maxC
+}
+
+const alphaBetaMax = async (board: Board, player: Player, depth: number, maxDepth: number, a: number, b: number) => {
+  
+  // Termianl State
+  if (depth > maxDepth) {
+    const v = evaluationFunction(board, player)
+    return v
+  } 
+
+  // Complete check
+  const completeStatus = gameCompleted(board)
+  if(completeStatus === 1) return - 100.0 / Math.pow(depth,2)
+  if(completeStatus === 2) return 100.0 / Math.pow(depth,2)
+  
   let maxV = Number.NEGATIVE_INFINITY;
-  let maxC = 0
   let invalid = 1
 
-  let p = [0,0,0,0,0,0,0]
-
   for (let col = 0; col < board[0].length; col++) {
-    if (tryDropCoin(board, col, player) !== 0) continue
+    if (tryDropCoin(board, col, 2) !== 0) continue
 
-    let v = alphaBetaMin(board, player, depth+1, a, b)
-    p[col] = v
+    let v = await alphaBetaMin(board, player, depth+1, maxDepth, a, b)
 
     if (v > maxV || invalid === 1) {
       invalid = 0
       maxV = v
-      maxC = col
     }
     if (v >= b) return maxV
     if (a < v) a = v
     tryRemoveCoin(board, col)
   }
 
-  return maxC
+  return maxV
 }
 
-const alphaBetaMax = (board: Board, player: Player, depth: number, a: number, b: number) => {
-  return 0;
-}
+const alphaBetaMin = async (board: Board, player: Player, depth: number, maxDepth: number, a: number, b: number) => {
 
-const alphaBetaMin = (board: Board, player: Player, depth: number, a: number, b: number) => {
-  return 0;
+  // Termianl State
+  if (depth > maxDepth) {
+    const v = evaluationFunction(board, player)
+    return v
+  } 
+
+  // Complete check
+  const completeStatus = gameCompleted(board)
+  if(completeStatus === 1) return - 100.0 / Math.pow(depth,2)
+  if(completeStatus === 2) return 100.0 / Math.pow(depth,2)
+  
+  let minV = Number.POSITIVE_INFINITY;
+  let invalid = 1
+
+  for (let col = 0; col < board[0].length; col++) {
+    var newBoard = [];
+      for (var i = 0; i < board.length; i++)
+      newBoard[i] = board[i].slice();
+
+    if (tryDropCoin(newBoard, col, 1) !== 0) continue
+
+    let v = await alphaBetaMax(newBoard, player, depth+1, maxDepth, a, b)
+
+    if (v < minV || invalid === 1) {
+      invalid = 0
+      minV = v
+    }
+    if (v <= a) return minV
+    if (v < b) b = v
+    tryRemoveCoin(newBoard, col)
+  }
+
+  return minV
 }
 
 /* Evaluation value of the current board for player */
 const evaluationFunction = (board: Board, player: Player) => {
 
-  const opponent = 1
-  const threes = countThrees(board, player)
-  const threes_o = countThrees(board, opponent)
-  const twos = countTwos(board, player)
-  const twos_o = countTwos(board, opponent)
+  const threes = countThrees(board, 2)
+  const threes_o = countThrees(board, 1)
+  const twos = countTwos(board, 2)
+  const twos_o = countTwos(board, 1)
 
   return (3 * threes + twos) - (3 * threes_o + twos_o) 
 }
@@ -382,7 +450,7 @@ const isConsecutive = (miniBoard: Player[]) => {
   if (miniBoard.length === 2) {
     if (
       miniBoard[0] === miniBoard[1] &&
-      miniBoard[1] === miniBoard[2]
+      miniBoard[1] === miniBoard[0]
     ) {
       return true
     }
@@ -416,7 +484,6 @@ class App extends React.Component<{}, State> {
     
     // Don't make a move if not ongoing state
     const {gameState} = this.state
-    console.log(gameState)
     if (gameState !== GameState.Ongoing) return 
 
     this.makeMove(col)
@@ -430,19 +497,23 @@ class App extends React.Component<{}, State> {
     const newBoard = board.slice()
 
     // drop a coin for user and update
-    dropCoin(newBoard, col, playerTurn)
+    if (dropCoin(newBoard, col, playerTurn) === false) return
     let gameState = gameCompleted(newBoard);
     this.setState({
       board: newBoard,
       gameState
     });
+    if (gameState !== GameState.Ongoing) return
 
     // drop a coin for ai and update
-    dropCoin(newBoard, alphaBetaRoot(board, playerTurn, 3, Number.NEGATIVE_INFINITY,  Number.POSITIVE_INFINITY), opponent)
-    gameState = gameCompleted(newBoard);
-    this.setState({
-      board: newBoard,
-      gameState
+    // const bestMove = alphaBetaRoot(board, playerTurn, 0, 1, Number.NEGATIVE_INFINITY,  Number.POSITIVE_INFINITY)
+    alphaBetaRoot(board, playerTurn, 0, 4, Number.NEGATIVE_INFINITY,  Number.POSITIVE_INFINITY).then((response) => {
+      dropCoin(newBoard, response, opponent)
+      gameState = gameCompleted(newBoard);
+      this.setState({
+        board: newBoard,
+        gameState
+      });
     });
   }
 
@@ -462,10 +533,35 @@ class App extends React.Component<{}, State> {
   }
   /* UI Ends here */
 
+  // Onclick reset board function
+  public reset = () => {
+    this.setState({
+      board: initializeBoard()
+    })
+  }
+
+  public showStatus = () => {
+    const {gameState} = this.state
+    switch (gameState) {
+      case (-1):
+        return 
+      case (0):
+        return "DRAW"
+      case (1):
+        return "YOU WON"
+      case (2):
+        return "YOU LOST"
+    }
+    return {gameState}
+  }
+
   render () {
     this.renderCells()
     return(
       <div className="App">
+        <div className="title">CONNECT 4</div>
+        <div className="status">{this.showStatus()}</div>
+        <button className ="button" onClick={() => { this.reset() }}>Reset</button>
         <div className="board">
           {this.renderCells()}
         </div>
